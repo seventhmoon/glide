@@ -708,8 +708,15 @@ public class RequestManager
 
   @Override
   public void onTrimMemory(int level) {
-    if (level == TRIM_MEMORY_MODERATE && pauseAllRequestsOnTrimMemoryModerate) {
-      pauseAllRequestsRecursive();
+    if (pauseAllRequestsOnTrimMemoryModerate) {
+      // On Android 14+ (API 34+), fine-grained trim levels like TRIM_MEMORY_MODERATE are
+      // deprecated.
+      // The primary signals indicating the app is not in the foreground are
+      // TRIM_MEMORY_UI_HIDDEN and higher. We should pause requests when the UI is hidden
+      // to save resources, in line with the original intent of pausing on memory pressure.
+      if (level >= TRIM_MEMORY_UI_HIDDEN || level == TRIM_MEMORY_MODERATE) {
+        pauseAllRequestsRecursive();
+      }
     }
   }
 
